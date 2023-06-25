@@ -76,9 +76,10 @@ func NewKafka(c *conf.ConfigSet) (*Kafka, error) {
 		config.Net.SASL.User = c.Kafka.Username
 		config.Net.SASL.Password = c.Kafka.Password
 		config.Net.SASL.Handshake = true
-		config.Net.SASL.Mechanism = sarama.SASLTypeSCRAMSHA512
+		config.Net.SASL.Mechanism = sarama.SASLMechanism(c.Kafka.Mechanism)
 		// SCRAMClient struct is not reported here
 		config.Net.SASL.SCRAMClientGeneratorFunc = func() sarama.SCRAMClient {
+			// return &SCRAMClient{HashGeneratorFcn: sha256.New}
 			return &SCRAMClient{HashGeneratorFcn: sha512.New}
 		}
 

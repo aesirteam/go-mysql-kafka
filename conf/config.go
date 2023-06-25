@@ -32,6 +32,7 @@ type KafkaSet struct {
 	Username           string `toml:"username"`
 	Password           string `toml:"password"`
 	CertFile           string `toml:"certFile"`
+	Mechanism          string `toml:"mechanism"`
 }
 
 type KafkaProducerSet struct {

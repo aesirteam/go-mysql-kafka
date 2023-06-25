@@ -47,6 +47,7 @@ username = "kafka-scram-user"
 password = "m3j0HE4zijH7"
 # ca证书
 certFile = "ca-cert"
+mechanism = "SCRAM-SHA-512"
 
 [kafka.producer]
 # 等待服务器所有副本都保存成功后的响应, NoResponse: 0 WaitForLocal: 1 WaitForAll: -1,发送完数据需要leader和follow都确认
