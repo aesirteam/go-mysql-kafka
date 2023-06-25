@@ -2,10 +2,6 @@ package sync_manager
 
 import (
 	"fmt"
-	"github.com/pingcap/errors"
-	"github.com/siddontang/go-mysql/mysql"
-	"github.com/siddontang/go/ioutil2"
-	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
 	"path"
@@ -13,6 +9,11 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/go-mysql-org/go-mysql/mysql"
+	"github.com/pingcap/errors"
+	"github.com/siddontang/go/ioutil2"
+	log "github.com/sirupsen/logrus"
 )
 
 type masterInfo struct {
@@ -30,6 +31,16 @@ type masterInfo struct {
 // 默认从文件中加载
 type FilePositionHolder struct {
 	dataDir string
+}
+
+func NewFilePositionHolder(dataDir string) *FilePositionHolder {
+	if _, err := os.Stat(dataDir); os.IsNotExist(err) {
+		os.MkdirAll(dataDir, 0755)
+	}
+
+	return &FilePositionHolder{
+		dataDir: dataDir,
+	}
 }
 
 // Save the function to save the binlog position

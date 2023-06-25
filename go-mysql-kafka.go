@@ -2,16 +2,15 @@ package main
 
 import (
 	"flag"
-	log "github.com/sirupsen/logrus"
 	"go-mysql-kafka/conf"
 	"go-mysql-kafka/gkafka"
-	"go-mysql-kafka/gredis"
-	"go-mysql-kafka/holder"
 	"go-mysql-kafka/mapper"
 	"go-mysql-kafka/sync_manager"
 	"os"
 	"os/signal"
 	"syscall"
+
+	log "github.com/sirupsen/logrus"
 )
 
 var cfg = flag.String("cfg", "app.toml", "setting up the configuration file")
@@ -21,7 +20,7 @@ func main() {
 	flag.Parse()
 
 	conf.Setup(*cfg)
-	gredis.Setup()
+	// gredis.Setup()
 
 	c := conf.Config
 
@@ -44,11 +43,9 @@ func main() {
 		syscall.SIGALRM,
 		syscall.SIGTERM)
 
-	// 初始化存储binlog位置, 这里用的是redis存储
-	positionHolder, err := holder.NewPosition(c)
-	if err != nil {
-		log.Fatalf("init position holder err: %+v", err)
-	}
+	// 初始化存储binlog位置
+	positionHolder := sync_manager.NewFilePositionHolder(c.SourceDB.DataDir)
+
 	kafkaProducer, err := gkafka.NewKafka(c)
 	if err != nil {
 		log.Fatalf("init kafka producer err: %+v", err)
@@ -79,10 +76,6 @@ func main() {
 
 	}()
 
-	// http服务
-	st := &sync_manager.Stat{Sm: sm, C: c}
-	go st.Run()
-
 	select {
 	case n := <-sc:
 		log.Infof("receive signal %v, closing", n)
@@ -93,8 +86,6 @@ func main() {
 
 	sm.Close()
 	kafkaProducer.Close()
-	gredis.Close()
-	st.Close()
 	<-done
 	log.Infof("sync manager is stop")
 }

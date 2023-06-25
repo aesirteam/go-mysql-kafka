@@ -3,13 +3,14 @@ package sync_manager
 import (
 	"context"
 	"fmt"
-	"github.com/pingcap/errors"
-	"github.com/siddontang/go-mysql/canal"
-	"github.com/siddontang/go/sync2"
-	log "github.com/sirupsen/logrus"
 	"go-mysql-kafka/conf"
 	"net/http"
 	"sync"
+
+	"github.com/go-mysql-org/go-mysql/canal"
+	"github.com/pingcap/errors"
+	"github.com/siddontang/go/sync2"
+	log "github.com/sirupsen/logrus"
 )
 
 type SyncManager struct {
@@ -118,7 +119,6 @@ func (s *SyncManager) newCanal() error {
 	return errors.Trace(err)
 }
 
-//
 func (s *SyncManager) prepareCanal() error {
 	s.canal.SetEventHandler(&eventHandler{s: s})
 	return nil
@@ -127,7 +127,7 @@ func (s *SyncManager) prepareCanal() error {
 // 加载binlog位置,建议使用接口外面自定义适合自己业务的加载方式,如果用docker不建议使用本地文件
 func (s *SyncManager) prepareMaster() error {
 	if s.posHolder == nil {
-		s.posHolder = &FilePositionHolder{dataDir: s.c.SourceDB.DataDir}
+		s.posHolder = &FilePositionHolder{s.c.SourceDB.DataDir}
 	}
 
 	s.master.holder = s.posHolder
@@ -136,8 +136,6 @@ func (s *SyncManager) prepareMaster() error {
 
 func (s *SyncManager) Run() error {
 	s.wg.Add(1)
-	// 添加prometheus的metrics值
-	canalSyncState.Set(float64(1))
 
 	// 监听channel消息并记录存储
 	go s.syncLoop()

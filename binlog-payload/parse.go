@@ -1,10 +1,11 @@
 package blp
 
 import (
-	"github.com/siddontang/go-mysql/canal"
-	"github.com/siddontang/go-mysql/schema"
 	"reflect"
 	"strings"
+
+	"github.com/go-mysql-org/go-mysql/canal"
+	"github.com/go-mysql-org/go-mysql/schema"
 )
 
 // DATA_FORMAT the data format of timestamp

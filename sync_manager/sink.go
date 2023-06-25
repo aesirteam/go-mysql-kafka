@@ -1,6 +1,6 @@
 package sync_manager
 
-import "github.com/siddontang/go-mysql/canal"
+import "github.com/go-mysql-org/go-mysql/canal"
 
 type Sink interface {
 	// 分析binlog接口

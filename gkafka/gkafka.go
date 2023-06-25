@@ -1,21 +1,48 @@
 package gkafka
 
 import (
+	"crypto/sha512"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
 	"fmt"
-	"github.com/Shopify/sarama"
-	"github.com/bwmarrin/snowflake"
-	"github.com/pingcap/errors"
-	"github.com/siddontang/go-mysql/canal"
-	log "github.com/sirupsen/logrus"
 	blp "go-mysql-kafka/binlog-payload"
 	"go-mysql-kafka/conf"
 	"io/ioutil"
 	"strconv"
 	"time"
+
+	"github.com/Shopify/sarama"
+	"github.com/bwmarrin/snowflake"
+	"github.com/go-mysql-org/go-mysql/canal"
+	"github.com/pingcap/errors"
+	log "github.com/sirupsen/logrus"
+	"github.com/xdg/scram"
 )
+
+type SCRAMClient struct {
+	*scram.Client
+	*scram.ClientConversation
+	scram.HashGeneratorFcn
+}
+
+func (x *SCRAMClient) Begin(userName, password, authzID string) (err error) {
+	x.Client, err = x.HashGeneratorFcn.NewClient(userName, password, authzID)
+	if err != nil {
+		return err
+	}
+	x.ClientConversation = x.Client.NewConversation()
+	return nil
+}
+
+func (x *SCRAMClient) Step(challenge string) (response string, err error) {
+	response, err = x.ClientConversation.Step(challenge)
+	return
+}
+
+func (x *SCRAMClient) Done() bool {
+	return x.ClientConversation.Done()
+}
 
 type Kafka struct {
 	c             *conf.ConfigSet
@@ -49,6 +76,11 @@ func NewKafka(c *conf.ConfigSet) (*Kafka, error) {
 		config.Net.SASL.User = c.Kafka.Username
 		config.Net.SASL.Password = c.Kafka.Password
 		config.Net.SASL.Handshake = true
+		config.Net.SASL.Mechanism = sarama.SASLTypeSCRAMSHA512
+		// SCRAMClient struct is not reported here
+		config.Net.SASL.SCRAMClientGeneratorFunc = func() sarama.SCRAMClient {
+			return &SCRAMClient{HashGeneratorFcn: sha512.New}
+		}
 
 		clientCertPool := x509.NewCertPool()
 		if ok := clientCertPool.AppendCertsFromPEM(certBytes); !ok {

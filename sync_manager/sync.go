@@ -2,12 +2,13 @@ package sync_manager
 
 import (
 	"fmt"
-	"github.com/pingcap/errors"
-	"github.com/siddontang/go-mysql/canal"
-	"github.com/siddontang/go-mysql/mysql"
-	"github.com/siddontang/go-mysql/replication"
-	log "github.com/sirupsen/logrus"
 	"time"
+
+	"github.com/go-mysql-org/go-mysql/canal"
+	"github.com/go-mysql-org/go-mysql/mysql"
+	"github.com/go-mysql-org/go-mysql/replication"
+	"github.com/pingcap/errors"
+	log "github.com/sirupsen/logrus"
 )
 
 type eventHandler struct {
@@ -20,7 +21,7 @@ type posSaver struct {
 }
 
 // OnRotate the function to handle binlog position rotation
-func (e *eventHandler) OnRotate(roateEvent *replication.RotateEvent) error {
+func (e *eventHandler) OnRotate(header *replication.EventHeader, roateEvent *replication.RotateEvent) error {
 	pos := mysql.Position{
 		Name: string(roateEvent.NextLogName),
 		Pos:  uint32(roateEvent.Position),
@@ -31,12 +32,12 @@ func (e *eventHandler) OnRotate(roateEvent *replication.RotateEvent) error {
 	return e.s.Ctx.Err()
 }
 
-func (e *eventHandler) OnTableChanged(schema string, table string) error {
+func (e *eventHandler) OnTableChanged(header *replication.EventHeader, schema string, table string) error {
 	return nil
 }
 
 // OnDDL the function to handle DDL event
-func (e *eventHandler) OnDDL(nextPos mysql.Position, _ *replication.QueryEvent) error {
+func (e *eventHandler) OnDDL(header *replication.EventHeader, nextPos mysql.Position, _ *replication.QueryEvent) error {
 	e.s.syncCh <- posSaver{nextPos, true}
 	return e.s.Ctx.Err()
 }
@@ -78,16 +79,16 @@ func (e *eventHandler) OnRow(rows *canal.RowsEvent) error {
 }
 
 // OnXID the function to handle XID event
-func (e *eventHandler) OnXID(nextPos mysql.Position) error {
+func (e *eventHandler) OnXID(header *replication.EventHeader, nextPos mysql.Position) error {
 	e.s.syncCh <- posSaver{nextPos, false}
 	return e.s.Ctx.Err()
 }
 
-func (e *eventHandler) OnGTID(gtid mysql.GTIDSet) error {
+func (e *eventHandler) OnGTID(header *replication.EventHeader, gtid mysql.GTIDSet) error {
 	return nil
 }
 
-func (e *eventHandler) OnPosSynced(pos mysql.Position, set mysql.GTIDSet, force bool) error {
+func (e *eventHandler) OnPosSynced(header *replication.EventHeader, pos mysql.Position, set mysql.GTIDSet, force bool) error {
 	return nil
 }
 
@@ -108,14 +109,12 @@ func (e *eventHandler) makeDeleteRequest(action string, rows [][]interface{}) er
 // for insert and delete
 func (e *eventHandler) makeRequest(action string, rows [][]interface{}) error {
 	realRows := int64(len(rows))
-	realRowsString := string(realRows)
+	// realRowsString := string(realRows)
 	switch action {
 	case canal.DeleteAction:
 		e.s.DeleteNum.Add(realRows)
-		dbDeleteNum.WithLabelValues(realRowsString).Inc()
 	case canal.InsertAction:
 		e.s.InsertNum.Add(realRows)
-		dbInsertNum.WithLabelValues(realRowsString).Inc()
 	default:
 		log.Infof("make request no tasks to be processed: None")
 	}
@@ -128,7 +127,6 @@ func (e *eventHandler) makeUpdateRequest(rows [][]interface{}) error {
 		return errors.Errorf("invalid update rows event, must have 2x rows, but %d", len(rows))
 	}
 	realRows := int64(len(rows) / 2)
-	dbUpdateNum.WithLabelValues(string(realRows)).Inc()
 	e.s.UpdateNum.Add(realRows)
 	return nil
 }

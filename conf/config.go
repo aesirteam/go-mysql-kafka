@@ -1,19 +1,18 @@
 package conf
 
 import (
-	"github.com/BurntSushi/toml"
-	"github.com/siddontang/go-mysql/schema"
-	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"time"
+
+	"github.com/BurntSushi/toml"
+	"github.com/go-mysql-org/go-mysql/schema"
+	log "github.com/sirupsen/logrus"
 )
 
 type ConfigSet struct {
 	Debug    bool     `toml:"debug"`    // 是否开启debug模式
 	Env      string   `toml:"env"`      // 运行环境
 	SourceDB MysqlSet `toml:"sourceDB"` // 源数据库的配置
-	Http     HttpSet  `toml:"http"`     // http配置
-	Redis    RedisSet `toml:"redis"`    // redis配置
 	Mapper   Mapper   `toml:"mapper"`   // 分表分库匹配规则
 	Kafka    KafkaSet `toml:"kafka"`
 }
@@ -21,11 +20,6 @@ type ConfigSet struct {
 // 分表分库
 type Mapper struct {
 	Schemas []string `toml:"schemas"`
-}
-
-type HttpSet struct {
-	StatAddr string `toml:"statAddr"`
-	StatPath string `toml:"statPath"` // metrics 访问路劲
 }
 
 type KafkaSet struct {
@@ -80,18 +74,6 @@ type MysqlSet struct {
 	//Rules  []*RuleConfig  `toml:"rule"`
 }
 
-type RedisSet struct {
-	Host          string        `toml:"host"`
-	Password      string        `toml:"password"`
-	DB            int           `toml:"db"`
-	PoolSize      int           `toml:"poolSize"`
-	MaxRetries    int           `toml:"maxRetries"`
-	IdleTimeout   time.Duration `toml:"idleTimeout"`
-	DialTimeout   time.Duration `toml:"dialTimeout"`
-	BinlogPrefix  string        `toml:"binlogPrefix"`
-	BinlogTimeout time.Duration `toml:"binlogTimeout"`
-}
-
 type SourceConfig struct {
 	Schema string   `toml:"schema"`
 	Tables []string `toml:"tables"`
@@ -140,20 +122,10 @@ func Setup(cfg string) {
 	if _, err := toml.Decode(string(data), &Config); err != nil {
 		log.Fatalf("decode toml config err: %+v", err)
 	}
+
 	if Config.Debug == true {
 		log.SetLevel(log.DebugLevel)
 	}
-
-	// redis 配置
-	Config.Redis.IdleTimeout = Config.Redis.IdleTimeout * time.Second
-
-	// 数据源配置
-	Config.SourceDB.FlushBulkTime = Config.SourceDB.FlushBulkTime * time.Millisecond
-
-	// redis 时间初始化
-	Config.Redis.IdleTimeout = Config.Redis.IdleTimeout * time.Second
-	Config.Redis.DialTimeout = Config.Redis.DialTimeout * time.Second
-	Config.Redis.BinlogTimeout = Config.Redis.BinlogTimeout * time.Second
 
 	// kafka 异步投递会卡死,目前先不开放
 	Config.Kafka.Producer.Async = false

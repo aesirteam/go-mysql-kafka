@@ -1,6 +1,6 @@
 package sync_manager
 
-import "github.com/siddontang/go-mysql/canal"
+import "github.com/go-mysql-org/go-mysql/canal"
 
 type RowMapper interface {
 	Transform(e *canal.RowsEvent) *canal.RowsEvent

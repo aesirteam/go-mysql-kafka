@@ -1,9 +1,10 @@
 package mapper
 
 import (
-	"github.com/siddontang/go-mysql/canal"
 	"go-mysql-kafka/conf"
 	"regexp"
+
+	"github.com/go-mysql-org/go-mysql/canal"
 )
 
 // 这块用于处理分表分库逻辑,这里只处理了drds的分表分库

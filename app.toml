@@ -1,11 +1,12 @@
 debug = true
 env = "dev"
+
 [sourceDB]
-host = "xxxxxxxxx"
+host = "192.168.9.159"
 port = 3306
-username = "xxxxxx"
-password = "xxxxxx"
-charset = ""
+username = "root"
+password = "Aic8Kee9"
+charset = "utf8"
 # server id like a slave,同时还作为ID生成器,生成kafka消息的ID
 serverID = 130
 flavor = "mysql"
@@ -15,11 +16,11 @@ bulkSize = 128
 flushBulkTime = 200
 skipNoPkTable = false
 skipMasterData = false
-
+DataDir = "/tmp/mysql"
 #
 [[sourceDB.sources]]
-schema = "xxxxx"
-tables = ["xxxxxx"]
+schema = "rd_expert"
+tables = ["gp_base_code"]
 
 #[[sourceDB.sources]]
 #schema = "fonzie"
@@ -31,46 +32,21 @@ tables = ["xxxxxx"]
 #index = "test"
 #type = "t"
 
-[http]
-statAddr = "127.0.0.1:8000"
-statPath = "/metrics"
-
-[redis]
-host = "127.0.0.1:6379"
-password = "xxxxx"
-
-db = 0
-poolSize = 30
-idleTimeout = 30
-maxRetries = 5
-dialTimeout = 10
-
-# binlog在redis的TTL,目前没有用到这个功能
-binlogTimeout = 900
-binlogPrefix = "xxxxxxx"
-
-# 分表分库做映射
-[mapper]
-schemas = ["xxxxxx"]
-
 [kafka]
 # kafka地址
-brokers = ["xxxxxx:9092"]
+brokers = ["bootstrap.kafka:38443"]
 # 设置kafka版本
-version = "2.1.0"
+version = "3.2.3"
 # 跳过证书可信性检测
 insecureSkipVerify = true
 # 开启ssl访问
-saslEnable = false
+saslEnable = true
 # 用户名
-username = "xxxxx"
+username = "kafka-scram-user"
 # 密码
-password = "xxxxxx"
+password = "m3j0HE4zijH7"
 # ca证书
 certFile = "ca-cert"
-
-
-
 
 [kafka.producer]
 # 等待服务器所有副本都保存成功后的响应, NoResponse: 0 WaitForLocal: 1 WaitForAll: -1,发送完数据需要leader和follow都确认
@@ -89,13 +65,11 @@ returnErrors = true
 # 消息投递失败重试次数
 retryMax = 5
 
-
-
-[[kafka.producer.headers]]
-key = "xxxxxx"
-value = "xxxxxx"
+#[[kafka.producer.headers]]
+#key = "xxxxxx"
+#value = "xxxxxx"
 
 # 默认目标topic是表名,如果要重命名就可以在这里配置对应关系
-[[kafka.producer.mapper]]
-sourceTable = "xxx"
-topic = "xxxx"
+#[[kafka.producer.mapper]]
+#sourceTable = "xxx"
+#topic = "xxxx"

@@ -1,6 +1,6 @@
 package blp
 
-import "github.com/siddontang/go-mysql/schema"
+import "github.com/go-mysql-org/go-mysql/schema"
 
 // DBSyncPayload the payload struct of database sync
 type DBSyncPayload struct {
@@ -9,7 +9,7 @@ type DBSyncPayload struct {
 	EventType string `json:"eventType"`
 
 	// the database name
-	Db string	`json:"db"`
+	Db string `json:"db"`
 	// the table name
 	Table string `json:"table"`
 	// the table columns: name to column definition
