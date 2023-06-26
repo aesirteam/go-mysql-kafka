@@ -3,6 +3,7 @@ package blp
 import (
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/go-mysql-org/go-mysql/canal"
 	"github.com/go-mysql-org/go-mysql/schema"
@@ -40,23 +41,36 @@ func parseColumns(columns *[]schema.TableColumn) *map[string]schema.TableColumn 
 	return &metaMap
 }
 
-func ParsePayload(e *canal.RowsEvent) *DBSyncPayload {
+func parseColumnsType(columns *[]schema.TableColumn) *map[string]string {
+	return nil
+}
+
+func ParseCannalPayload(e *canal.RowsEvent) *CanalPayload {
 	var columnChanged []string
-	var rowChanges []*RowChange
+	var payload = &CanalPayload{
+		EventType: strings.ToUpper(e.Action),
+		Db:        e.Table.Schema,
+		Table:     e.Table.Name,
+		// MysqlType: make(map[string]string, len(e.Table.Columns)),
+	}
+
+	for pk := range e.Table.PKColumns {
+		payload.PKColumn = append(payload.PKColumn, e.Table.GetPKColumn(pk).Name)
+	}
+
+	// for _, col := range e.Table.Columns {
+	// 	payload.MysqlType[col.Name] = col.RawType
+	// }
+
 	if e.Action == canal.InsertAction {
 		for _, row := range e.Rows {
-			rowChanges = append(rowChanges, &RowChange{
-				PreUpdate: map[string]interface{}{},
-				Snapshot:  *parseRowMap(&e.Table.Columns, row),
-			})
+			payload.Rows = append(payload.Rows, *parseRowMap(&e.Table.Columns, row))
 		}
 	} else if e.Action == canal.DeleteAction {
 		for _, row := range e.Rows {
-			rowChanges = append(rowChanges, &RowChange{
-				PreUpdate: *parseRowMap(&e.Table.Columns, row),
-				Snapshot:  map[string]interface{}{},
-			})
+			payload.Rows = append(payload.Rows, *parseRowMap(&e.Table.Columns, row))
 		}
+
 	} else if e.Action == canal.UpdateAction {
 		for i := 0; i < len(e.Rows); i += 2 {
 			pre := e.Rows[i]
@@ -84,22 +98,11 @@ func ParsePayload(e *canal.RowsEvent) *DBSyncPayload {
 				preUpdate[c] = beforeUpdate[c]
 			}
 
-			rowChanges = append(rowChanges, &RowChange{
-				PreUpdate: preUpdate,
-				Snapshot:  afterUpdate,
-			})
+			payload.Es = time.Unix(int64(e.Header.Timestamp), 0).UnixNano() / 1e6
+			payload.Olds = append(payload.Olds, preUpdate)
+			payload.Rows = append(payload.Rows, afterUpdate)
 		}
 	}
 
-	payload := &DBSyncPayload{
-		EventType: strings.ToUpper(e.Action),
-		Db:        e.Table.Schema,
-		Table:     e.Table.Name,
-		//TODO temporally remove scheme information from payload
-		//PKColumn: e.Table.GetPKColumn(0).Name,
-		//Columns: *parseColumns(&e.Table.Columns),
-		Rows:           rowChanges,
-		ColumnsChanged: columnChanged,
-	}
 	return payload
 }

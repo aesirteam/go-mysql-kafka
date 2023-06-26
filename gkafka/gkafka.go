@@ -153,14 +153,17 @@ func NewKafka(c *conf.ConfigSet) (*Kafka, error) {
 
 // 分析binlog生成json
 func (k *Kafka) Parse(e *canal.RowsEvent) ([]interface{}, error) {
-	now := time.Now()
-	payload := blp.ParsePayload(e)
+	var ts = strconv.FormatInt(time.Now().UnixNano()/1e6, 10)
+	// payload := blp.ParsePayload(e)
+	payload := blp.ParseCannalPayload(e)
+	payload.Id = k.idGen.Generate().Int64()
+	payload.Ts, _ = strconv.ParseInt(ts, 10, 64)
+
 	payloadByte, err := json.Marshal(payload)
 	if err != nil {
 		return nil, err
 	}
 
-	var id = k.idGen.Generate().String()
 	var hdrs []sarama.RecordHeader
 
 	// 博士之前把解析出来的binlog存放在redis,这里就先不存储了
@@ -187,11 +190,11 @@ func (k *Kafka) Parse(e *canal.RowsEvent) ([]interface{}, error) {
 	hdrs = append(hdrs, []sarama.RecordHeader{
 		{
 			Key:   []byte("EventTriggerTime"),
-			Value: []byte(strconv.FormatInt(now.Unix(), 10)),
+			Value: []byte(ts),
 		},
 		{
 			Key:   []byte("EventID"),
-			Value: []byte(id),
+			Value: []byte(strconv.FormatInt(payload.Id, 10)),
 		},
 	}...)
 	var message *sarama.ProducerMessage
