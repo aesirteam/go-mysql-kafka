@@ -4,7 +4,6 @@ import (
 	"crypto/sha512"
 	"crypto/tls"
 	"crypto/x509"
-	"encoding/json"
 	"fmt"
 	blp "go-mysql-kafka/binlog-payload"
 	"go-mysql-kafka/conf"
@@ -64,6 +63,8 @@ func NewKafka(c *conf.ConfigSet) (*Kafka, error) {
 	// 是否等待成功和失败后的响应,只有的RequireAcks设置不是NoReponse这里才有用
 	config.Producer.Return.Successes = c.Kafka.Producer.ReturnSuccesses
 	config.Producer.Return.Errors = c.Kafka.Producer.ReturnErrors
+
+	config.Producer.Compression = sarama.CompressionSnappy
 
 	// 开启sasl认证
 	if c.Kafka.SaslEnable == true {
@@ -154,12 +155,13 @@ func NewKafka(c *conf.ConfigSet) (*Kafka, error) {
 // 分析binlog生成json
 func (k *Kafka) Parse(e *canal.RowsEvent) ([]interface{}, error) {
 	var ts = strconv.FormatInt(time.Now().UnixNano()/1e6, 10)
-	// payload := blp.ParsePayload(e)
-	payload := blp.ParseCannalPayload(e)
+	payload := blp.ParseCanalPayload(e)
+	// payload := blp.ParseAvroPayload(e)
+
 	payload.Id = k.idGen.Generate().Int64()
 	payload.Ts, _ = strconv.ParseInt(ts, 10, 64)
 
-	payloadByte, err := json.Marshal(payload)
+	payloadByte, err := payload.MarshalJSON()
 	if err != nil {
 		return nil, err
 	}
@@ -203,10 +205,10 @@ func (k *Kafka) Parse(e *canal.RowsEvent) ([]interface{}, error) {
 	}
 	message.Headers = hdrs
 	message.Value = sarama.StringEncoder(string(payloadByte))
+	// message.Value = sarama.ByteEncoder([]byte(`abc`))
 	return []interface{}{
 		&message,
 	}, nil
-
 }
 
 // 将kafka消息推送到kafka

@@ -7,6 +7,7 @@ require (
 	github.com/Shopify/sarama v1.38.1
 	github.com/bwmarrin/snowflake v0.3.0
 	github.com/go-mysql-org/go-mysql v1.7.0
+	github.com/mailru/easyjson v0.7.7
 	github.com/pingcap/errors v0.11.5-0.20210425183316-da1aaba5fb63
 	github.com/siddontang/go v0.0.0-20180604090527-bdc77568d726
 	github.com/sirupsen/logrus v1.4.2
@@ -28,6 +29,7 @@ require (
 	github.com/jcmturner/gofork v1.7.6 // indirect
 	github.com/jcmturner/gokrb5/v8 v8.4.3 // indirect
 	github.com/jcmturner/rpc/v2 v2.0.3 // indirect
+	github.com/josharian/intern v1.0.0 // indirect
 	github.com/klauspost/compress v1.15.14 // indirect
 	github.com/konsorten/go-windows-terminal-sequences v1.0.1 // indirect
 	github.com/pierrec/lz4/v4 v4.1.17 // indirect

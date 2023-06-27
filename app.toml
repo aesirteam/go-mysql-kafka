@@ -1,5 +1,6 @@
 debug = true
 env = "dev"
+prefix = "xxxx"
 
 [sourceDB]
 host = "192.168.9.159"
@@ -20,17 +21,8 @@ DataDir = "/tmp/mysql"
 #
 [[sourceDB.sources]]
 schema = "rd_expert"
-tables = ["gp_base_code"]
-
-#[[sourceDB.sources]]
-#schema = "fonzie"
-#tables = ["t", "t_[0-9]{4}", "tfield", "tfilter"]
-
-#[[sourceDB.rule]]
-#schema = "test"
-#table = "t"
-#index = "test"
-#type = "t"
+tables = ["gp_base_code","sys_log"]
+#tables = ["gp_*"]
 
 [kafka]
 # kafka地址

@@ -13,6 +13,7 @@ import (
 
 type eventHandler struct {
 	s *SyncManager
+	// ocfw *OCFWriter
 }
 
 type posSaver struct {

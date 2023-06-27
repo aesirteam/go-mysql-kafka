@@ -17,3 +17,4 @@ idea
 .idea/*
 .vscode
 .vscode/*
+go-mysql-kafka

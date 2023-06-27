@@ -41,11 +41,7 @@ func parseColumns(columns *[]schema.TableColumn) *map[string]schema.TableColumn 
 	return &metaMap
 }
 
-func parseColumnsType(columns *[]schema.TableColumn) *map[string]string {
-	return nil
-}
-
-func ParseCannalPayload(e *canal.RowsEvent) *CanalPayload {
+func ParseCanalPayload(e *canal.RowsEvent) *CanalPayload {
 	var columnChanged []string
 	var payload = &CanalPayload{
 		EventType: strings.ToUpper(e.Action),
