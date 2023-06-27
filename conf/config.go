@@ -10,8 +10,9 @@ import (
 )
 
 type ConfigSet struct {
-	Debug    bool     `toml:"debug"`    // 是否开启debug模式
-	Env      string   `toml:"env"`      // 运行环境
+	Debug    bool     `toml:"debug"` // 是否开启debug模式
+	Env      string   `toml:"env"`   // 运行环境
+	Alias    string   `toml:"alias"`
 	SourceDB MysqlSet `toml:"sourceDB"` // 源数据库的配置
 	Mapper   Mapper   `toml:"mapper"`   // 分表分库匹配规则
 	Kafka    KafkaSet `toml:"kafka"`

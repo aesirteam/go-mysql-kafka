@@ -169,8 +169,11 @@ func (k *Kafka) Parse(e *canal.RowsEvent) ([]interface{}, error) {
 	var hdrs []sarama.RecordHeader
 
 	// 博士之前把解析出来的binlog存放在redis,这里就先不存储了
+	if k.c.Alias == "" {
+		k.c.Alias = "__"
+	}
 
-	topic := e.Table.Name
+	topic := fmt.Sprintf("%s.%s.%s", k.c.Alias, e.Table.Schema, e.Table.Name)
 
 	// 判断topic是否需要特定,默认是表名
 	for _, m := range k.c.Kafka.Producer.TableMapperTopic {

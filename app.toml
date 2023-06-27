@@ -1,6 +1,6 @@
 debug = true
 env = "dev"
-prefix = "xxxx"
+alias = "xxxx"
 
 [sourceDB]
 host = "192.168.9.159"
