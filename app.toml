@@ -1,6 +1,6 @@
 debug = true
 env = "dev"
-alias = "xxxx"
+#alias = "__mysql__"
 
 [sourceDB]
 host = "192.168.9.159"
